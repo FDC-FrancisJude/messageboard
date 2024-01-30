@@ -20,6 +20,11 @@
                                     'url' => array('controller' => 'profile', 'action' => 'update'),
                                     'class' => 'form-horizontal'
                                 ));
+                                echo $this->Form->input('email', array(
+                                    'label' => 'Email',
+                                    'class' => 'form-control',
+                                    'div' => array('class' => 'form-group'),
+                                ));
                                 echo $this->Form->input('name', array(
                                     'label' => 'Name',
                                     'class' => 'form-control',
@@ -44,11 +49,7 @@
                                     'class' => 'form-control',
                                     'div' => array('class' => 'form-group'),
                                 ));
-                                echo $this->Form->input('email', array(
-                                    'label' => 'Email',
-                                    'class' => 'form-control',
-                                    'div' => array('class' => 'form-group'),
-                                ));
+                                
                                 echo $this->Form->end(array('label' => 'Save Profile', 'class' => 'btn btn-primary'));
                                 ?>
                             </div>
