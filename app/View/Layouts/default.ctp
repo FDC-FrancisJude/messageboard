@@ -96,20 +96,29 @@ $cakeVersion = __d('cake_dev', 'CakePHP %s', Configure::version())
 					<ul class="navbar-nav ml-auto" style="font-size: 20px; font-weight: bold;">
 						<li class="nav-item">
 							<?php
-							echo $this->Html->link(
-								'Welcome, ' . $login_user['name'],
-								array('controller' => 'account', 'action' => 'index'),
-								array('class' => 'nav-link')
-							);
+								// echo $this->Html->link(
+								// 	'Welcome, ' . $login_user['name'],
+								// 	array('controller' => 'account', 'action' => 'index'),
+								// 	array('class' => 'nav-link')
+								// );
+								echo $this->Html->link(
+									'Welcome, ' . $login_user['name'],
+									array('controller' => 'account', 'action' => 'index'),
+									array(
+										'class' => 'nav-link disabled-link',
+										'id' => 'disabled-link', 
+										'onClick' => 'return false;', 
+									)
+								);
 							?>
 						</li>
 						<li class="nav-item">
 							<?php
-							echo $this->Html->link(
-								'Logout',
-								array('controller' => 'users', 'action' => 'logout'),
-								array('class' => 'nav-link')
-							);
+								echo $this->Html->link(
+									'Logout',
+									array('controller' => 'users', 'action' => 'logout'),
+									array('class' => 'nav-link')
+								);
 							?>
 						</li>
 					</ul>
@@ -137,9 +146,17 @@ $cakeVersion = __d('cake_dev', 'CakePHP %s', Configure::version())
 								Profile
 							</div>
 							<div class="card-body text-center">
-								<img src="https://placekitten.com/150/150" class="img-fluid rounded-circle" alt="User Image">
+								<?php
+									echo $this->Html->image($users['Profile']['profile_pic'], array(
+										'class' => 'img-fluid rounded-circle',
+										'alt' => 'User Image',
+										'width' => 150,
+										'height' => 150,
+										'style' => 'width: 150px; height: 150px;',
+									));
+								?>
 								<h2 class="card-title"><?php echo !empty($users['User']['name']) ? $users['User']['name'] : 'Unset'; ?></h2>
-								<?php if(empty($profile['Profile']['gender']) && empty($profile['Profile']['birthday']) && empty($profile['Profile']['hubby'])): ?>
+								<?php if(empty($users['Profile']['gender']) || empty($users['Profile']['birthday']) || empty($users['Profile']['hubby'])): ?>
 								<p class="card-text">Profile not yet completed. Please complete your profile.</p>
 								<?php
 									echo $this->Html->link(
@@ -148,6 +165,8 @@ $cakeVersion = __d('cake_dev', 'CakePHP %s', Configure::version())
 										array('class' => 'btn btn-primary btn-sm')
 									);
 								?>
+								<?php else:?>
+									<p class="card-text"><?php echo $users['Profile']['hubby'];?></p>
 								<?php endif;?>
 								
 							</div>
@@ -160,7 +179,7 @@ $cakeVersion = __d('cake_dev', 'CakePHP %s', Configure::version())
 					<div class="<?php echo $is_login ? 'col-md-9' : 'col-md-12' ?>">
 						<?php  echo $this->fetch('content'); ?>
 					</div>
-					<?php //print_r($is_login) ?>
+					<?php //print_r($login_user) ?>
 				</div>
 			</div>
 

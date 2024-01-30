@@ -26,6 +26,7 @@ class Profile extends AppModel {
                 'message' => 'Profile is required',
             ), 
         ),
+        
         'email' => array(
             'notBlank' => array(
                 'rule' => array('notBlank'),
