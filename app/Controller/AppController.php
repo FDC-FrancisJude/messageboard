@@ -21,6 +21,7 @@
 
 App::uses('Controller', 'Controller');
 
+
 /**
  * Application Controller
  *
@@ -31,4 +32,54 @@ App::uses('Controller', 'Controller');
  * @link		https://book.cakephp.org/2.0/en/controllers.html#the-app-controller
  */
 class AppController extends Controller {
+
+    public $components = array(
+        'Flash',
+        'Session',
+        'Auth' => [
+            'loginAction' => [
+                'controller' => 'users',
+                'action' => 'login',
+            ],
+            'authenticate' => [
+                'Form' => [
+                    'fields' => ['username' => 'email', 'password' => 'password'],
+                ],
+            ],
+            'loginRedirect' => [
+                'controller' => 'message',
+                'action' => 'index',
+            ],
+            'logoutRedirect' => [
+                'controller' => 'users',
+                'action' => 'login',
+            ],
+        ],
+    );
+
+    public function beforeFilter() {
+        $this->Auth->allow('register', 'login');
+        if($this->Session->read('login_success')){
+            $this->Auth->allow('welcome');
+        }
+        
+        $isLogin = $this->Auth->loggedIn();
+        $this->set('is_login', $isLogin);
+        $loginUser = $this->Auth->user();
+        $this->set('login_user', $loginUser);
+
+        if ($isLogin) {
+            $loggedInUserId = $loginUser['id'];
+            
+            $this->loadModel('User');
+            $this->loadModel('Profile');
+
+            $userData = $this->User->find('first', array(
+                'conditions' => array('User.id' => $loggedInUserId),
+                'contain' => array('Profile'),
+            ));
+            $this->set('users', $userData);
+    
+        }
+    }
 }

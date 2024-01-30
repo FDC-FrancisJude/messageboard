@@ -23,10 +23,17 @@
 /** General Style Info **/
 body {
 	background: #003d4c;
-	color: #fff;
+	color: #f8f9fa;
 	font-family:'lucida grande',verdana,helvetica,arial,sans-serif;
 	font-size:90%;
 	margin: 0;
+}
+.welcome-container {
+	text-align: center;
+	margin-top: 100px;
+}
+.navbar-brand{
+	margin-left:10px;
 }
 a {
 	color: #003d4c;
@@ -741,3 +748,5 @@ pre {
 #url-rewriting-warning {
 	display:none;
 }
+
+

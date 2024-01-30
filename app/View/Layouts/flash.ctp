@@ -36,4 +36,4 @@ A:HOVER { text-decoration: underline; color:#44E }
 	<?php echo $this->Html->link($message, $url); ?>
 </p>
 </body>
-</html>
+</html>s
