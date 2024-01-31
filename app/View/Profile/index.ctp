@@ -26,10 +26,43 @@
                 <div class="col-md-8">
                     <h2 class="card-title"><?php echo !empty($users['User']['name']) ? $users['User']['name'] : 'Unset'; ?></h2>
                     <p class="card-text">Gender: <?php echo !empty($users['Profile']['gender']) ? $users['Profile']['gender'] : 'Unset'; ?></p>
-                    <p class="card-text">Birthdate: <?php echo !empty($users['Profile']['birthday']) ? $users['Profile']['birthday'] : 'Unset'; ?></p>
-                    <p class="card-text">Email: <?php echo !empty($users['User']['email']) ? $users['User']['email'] : 'Unset'; ?></p>
-                    <p class="card-text">Join: <?php echo !empty($users['Profile']['created_at']) ? $users['Profile']['created_at'] : 'Unset'; ?></p>
-                    <p class="card-text">Last Login: <?php echo !empty($users['User']['last_login_time']) ? $users['User']['last_login_time'] : 'Unset'; ?></p>
+                    <p class="card-text">Birthdate: 
+                        <?php 
+                            if (!empty($users['Profile']['birthday'])) {
+                                $dateString = $users['Profile']['birthday'];
+                                $timestamp = strtotime($dateString);
+                                $formattedDate = date("F j, Y", $timestamp);
+                                echo $formattedDate;
+                            } else {
+                                echo 'Unset';
+                            }
+                        ?>
+                    </p>
+
+                    <p class="card-text">Join:
+                        <?php 
+                            if (!empty($users['Profile']['created_at'])) {
+                                $dateString = $users['Profile']['created_at'];
+                                $timestamp = strtotime($dateString);
+                                $formattedDate = date("F j, Y g:i A", $timestamp);
+                                echo $formattedDate;
+                            } else {
+                                echo 'Unset';
+                            }
+                        ?>
+                    </p>
+                    <p class="card-text">Last Login:
+                        <?php 
+                            if (!empty($users['User']['last_login_time'])) {
+                                $dateString = $users['User']['last_login_time'];
+                                $timestamp = strtotime($dateString);
+                                $formattedDate = date("F j, Y g:i A", $timestamp);
+                                echo $formattedDate;
+                            } else {
+                                echo 'Unset';
+                            }
+                        ?>
+                    </p>
                     <p class="card-text">Hubby <br> <?php echo !empty($users['Profile']['hubby']) ? $users['Profile']['hubby'] : 'Unset'; ?></p>
                     <?php //print_r($users); ?>
                 </div>

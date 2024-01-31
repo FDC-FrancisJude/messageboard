@@ -58,6 +58,7 @@
                                 ));
 
                                 echo $this->Form->input('email', array(
+                                    'type' => 'hidden',
                                     'label' => 'Email',
                                     'class' => 'form-control',
                                     'div' => array('class' => 'form-group'),
@@ -87,7 +88,7 @@
                                     'value' => $hubbyValue
                                 ));
 
-                                echo $this->Form->end(array('label' => 'Save Profile', 'class' => 'btn btn-primary'));
+                                echo $this->Form->button('Save Profile', ['class' => 'btn btn-success mb-3', 'type' => 'submit']);
                             ?>
                         </div>
                     </div>

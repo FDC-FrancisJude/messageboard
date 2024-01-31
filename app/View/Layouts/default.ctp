@@ -51,6 +51,10 @@ $cakeVersion = __d('cake_dev', 'CakePHP %s', Configure::version())
 	<?php echo $this->Html->script('https://code.jquery.com/ui/1.12.1/jquery-ui.js'); ?>
 	<?php echo $this->Html->css('https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css'); ?>
 
+	<?php echo $this->Html->script('https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js'); ?>
+	<?php echo $this->Html->css('https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css'); ?>
+	
+
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 </head>
 
@@ -96,20 +100,20 @@ $cakeVersion = __d('cake_dev', 'CakePHP %s', Configure::version())
 					<ul class="navbar-nav ml-auto" style="font-size: 20px; font-weight: bold;">
 						<li class="nav-item">
 							<?php
-								// echo $this->Html->link(
-								// 	'Welcome, ' . $login_user['name'],
-								// 	array('controller' => 'account', 'action' => 'index'),
-								// 	array('class' => 'nav-link')
-								// );
 								echo $this->Html->link(
 									'Welcome, ' . $login_user['name'],
 									array('controller' => 'account', 'action' => 'index'),
-									array(
-										'class' => 'nav-link disabled-link',
-										'id' => 'disabled-link', 
-										'onClick' => 'return false;', 
-									)
+									array('class' => 'nav-link')
 								);
+								// echo $this->Html->link(
+								// 	'Welcome, ' . $login_user['name'],
+								// 	array('controller' => 'account', 'action' => 'index'),
+								// 	array(
+								// 		'class' => 'nav-link disabled-link',
+								// 		'id' => 'disabled-link', 
+								// 		'onClick' => 'return false;', 
+								// 	)
+								// );
 							?>
 						</li>
 						<li class="nav-item">
@@ -152,7 +156,7 @@ $cakeVersion = __d('cake_dev', 'CakePHP %s', Configure::version())
 										'alt' => 'User Image',
 										'width' => 150,
 										'height' => 150,
-										'style' => 'width: 150px; height: 150px;',
+										'style' => 'width: 150px; height: 150px; border: 2px solid #ccc; border-radius: 50%;', // Add your additional styles here
 									));
 								?>
 								<h2 class="card-title"><?php echo !empty($users['User']['name']) ? $users['User']['name'] : 'Unset'; ?></h2>
