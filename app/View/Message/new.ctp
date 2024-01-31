@@ -20,7 +20,7 @@
                             $options['User'][$userId] = $userName;
                             $options['Profile'][$userId] = $profilePic;
                         }
-                        print_r($options);
+                        //print_r($options);
                         echo $this->Form->input('to_user_id', array(
                             'label' => 'Recipient',
                             'type' => 'select',
@@ -55,7 +55,7 @@
             console.log('Recipient:', recipient.id);
             var $recipient = $(
                 '<span> <?php 
-                            echo $this->Html->image($users['Profile']['recipient.id'], array(
+                            echo $this->Html->image($users['Profile']['profile_pic'], array(
                                 'class' => 'img-fluid rounded-circle',
                                 'alt' => 'User Image',
                                 'style' => 'width: 40px; height: 40px; border: 2px solid #ccc; border-radius: 50%;', // Add your additional styles here
