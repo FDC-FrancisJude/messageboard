@@ -47,27 +47,23 @@
 </div>
 
 <script>
+     var userData = JSON.parse('<?php echo json_encode($options); ?>');
     $(document).ready(function() {
         function formatState(recipient) {
             if (!recipient.id) {
                 return recipient.text;
             }
-            console.log('Recipient:', recipient.id);
-            var $recipient = $(
-                '<span> <?php 
-                            echo $this->Html->image($users['Profile']['profile_pic'], array(
-                                'class' => 'img-fluid rounded-circle',
-                                'alt' => 'User Image',
-                                'style' => 'width: 40px; height: 40px; border: 2px solid #ccc; border-radius: 50%;', // Add your additional styles here
-                            )); 
-                        ?> <span style="font-size: 15px; font-weight: bold">' + recipient.text + '</span></span>'
-            );
+            var $recipient = $(`
+                <span>
+                <img src="<?php echo $this->webroot; ?>img/${userData.Profile[recipient.id]}" style="width: 40px; height: 40px; border: 2px solid #ccc; border-radius: 50%;" alt="${userData.User[recipient.id]}">
+                <span style="font-size: 15px; font-weight: bold">${recipient.text}</span></span>`);
             return $recipient;
         };
 
         $("#recipient-type").select2({
             templateResult: formatState,
             minimumInputLength: 1,
+            maximumSelectionLength: 1,
             language: {
                 inputTooShort: function () {
                     return "Search for a recipient";
