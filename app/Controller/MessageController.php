@@ -1,11 +1,48 @@
 <?php
 App::uses('AppController', 'Controller');
-class MessageController extends AppController {
-    public $uses = array('User', 'Profile', 'Message');
+class MessageController extends AppController
+{
+    public $uses = array('User', 'Profile', 'Message', 'MessageDetail');
     public $helpers = array('Js', 'TimeAgo');
 
     public $limit = 2;
-    
+
+    public function add() {
+        $this->autoRender = false;
+        if ($this->request->is('ajax')) {
+            $response = array();
+
+            try {
+                $message_content = $this->request->data['MessageDetail']['message_content'];
+                $sender_user_id = $this->request->data['MessageDetail']['sender_user_id'];
+                $message_list_id = $this->request->data['MessageDetail']['message_list_id'];
+
+                $this->loadModel('MessageDetail');
+
+                $dataToSave = array(
+                    'message_content' => $message_content,
+                    'sender_user_id' => $sender_user_id,
+                    'message_list_id' => $message_list_id,
+                    'created_at_ip' => $this->request->clientIp()
+                );
+
+                if ($this->MessageDetail->save($dataToSave)) {
+                    $response['status'] = 'success';
+                    $response['message'] = 'Data saved successfully';
+                } else {
+                    throw new Exception('Failed to save data.');
+                }
+            } catch (Exception $e) {
+                $response['status'] = 'error';
+                $response['message'] = $e->getMessage();
+            }
+
+            $this->response->type('json');
+            echo json_encode($response);
+            exit;
+        }
+    }
+
     public function index() {
         $limit = $this->limit;
         $loggedInUserId = $this->Auth->user('id');
@@ -32,11 +69,144 @@ class MessageController extends AppController {
             ),
             'order' => 'Message.created_at ASC',
             'group' => 'Message.id',
-            'limit' => $limit,
         ));
-        
+
         $this->set('messagelists', $data);
         $this->set('limit', $limit);
+    }
+
+
+    public function view($id = null) {
+        if (!$id) {
+            $this->redirect(array('controller' => 'message', 'action' => 'index'));
+        }
+        $limit = $this->limit;
+        $this->loadModel('MessageDetail');
+        $this->loadModel('Message');
+        $this->Session->write('messagID', $id);
+
+        $existingMessageList = $this->Message->find('first', array(
+            'conditions' => array(
+                'Message.id' => $id
+            )
+        ));
+    
+        if (!$existingMessageList) {
+            $this->Flash->error(__('Message not found.'));
+            $this->redirect(array('controller' => 'message', 'action' => 'index'));
+        }
+
+        $data = $this->MessageDetail->find('all', array(
+            'conditions' => array(
+                'MessageDetail.message_list_id' => $id
+            ),
+            'fields' => array('MessageDetail.id', 'MessageDetail.message_content', 'MessageDetail.sender_user_id', 'MessageDetail.created_at'),
+            'order' => 'MessageDetail.created_at ASC',
+        ));
+        $this->set('messageDetailslist', $data);
+
+        $name = $this->Message->find('all', array(
+            'conditions' => array(
+                'OR' => array(
+                    'Message.id' => $id,
+
+                )
+            ),
+            'contain' => array(
+                'Sender' => array(
+                    'fields' => array('Sender.id', 'Sender.name', 'Sender.email', 'SenderProfile.*'),
+                ),
+                'Recipient' => array(
+                    'fields' => array('Recipient.id', 'Recipient.name', 'Recipient.email', 'RecipientProfile.*'),
+                ),
+                'MessageDetail' => array(
+                    'fields' => array('MessageDetail.id', 'MessageDetail.content', 'MessageDetail.created_at'),
+                    'limit' => 1,
+                    'order' => 'MessageDetail.created_at DESC',
+                ),
+            ),
+            'order' => 'Message.created_at ASC',
+            'group' => 'Message.id',
+        ));
+        $this->set('recipientName', $name);
+        $this->set('limit', $limit);
+    }
+    public function viewLoadData($limit) {
+        $loggedInUserId = $this->Auth->user('id');
+        $this->loadModel('MessageDetail');
+        $messageId = $this->Session->read('messagID');
+        $this->autoRender = false;
+
+        $data = $this->MessageDetail->find('all', array(
+            'conditions' => array(
+                'MessageDetail.message_list_id' => $messageId,
+
+            ),
+            'fields' => array(
+                'MessageDetail.id',
+                'MessageDetail.message_content',
+                'MessageDetail.sender_user_id',
+                'MessageDetail.created_at',
+                'Message.*',
+                'SenderProfile.*',
+                'RecipientProfile.*',
+                'SenderUserProfile.*' // Include the sender user profile fields
+            ),
+            'order' => 'MessageDetail.created_at ASC',
+            'limit' => $limit,
+            'joins' => array(
+                array(
+                    'table' => 'message_list',
+                    'alias' => 'Message',
+                    'type' => 'INNER',
+                    'conditions' => array(
+                        'Message.id = MessageDetail.message_list_id'
+                    )
+                ),
+                array(
+                    'table' => 'profile',
+                    'alias' => 'SenderProfile',
+                    'type' => 'INNER',
+                    'conditions' => array(
+                        'SenderProfile.user_id = Message.user_id'
+                    )
+                ),
+                array(
+                    'table' => 'profile',
+                    'alias' => 'RecipientProfile',
+                    'type' => 'INNER',
+                    'conditions' => array(
+                        'RecipientProfile.user_id = Message.to_user_id'
+                    )
+                ),
+                array(
+                    'table' => 'profile',
+                    'alias' => 'SenderUserProfile', // Alias for Sender's user profile
+                    'type' => 'INNER',
+                    'conditions' => array(
+                        'SenderUserProfile.user_id = MessageDetail.sender_user_id'
+                    )
+                )
+            )
+        ));
+
+        $loginUserData = array(
+            'loggedInUserId' => $loggedInUserId,
+            'messages' => $data,
+        );
+
+        $this->response->type('json');
+        $this->response->body(json_encode($loginUserData));
+        return $this->response;
+    }
+
+    public function deleteMessage($id) {
+        $this->Message->delete($id);
+        //$this->Flash->success(__('Message conversation deleted successfully'));
+        $data = ['success' => true, 'message' => 'Record and related details deleted successfully'];
+        $this->response->type('json');
+        $this->response->body(json_encode($data));
+        return $this->response;
     }
 
     public function display($filename) {
@@ -51,16 +221,38 @@ class MessageController extends AppController {
         }
     }
 
-    public function loadMore($limit) {
-        $this->autoRender = false; 
+    public function messageListData($limit) {
+        $search = isset($_GET['search']) ? $_GET['search'] : null;
+        $this->autoRender = false;
         $loggedInUserId = $this->Auth->user('id');
-    
-        $data = $this->Message->find('all', array(
-            'conditions' => array(
+
+        if ($search == 'all') {
+            $conditions = array(
                 'OR' => array(
-                    'Message.user_id' => $loggedInUserId,
-                )
-            ),
+
+                        'Message.user_id' => $loggedInUserId,
+                        'Message.to_user_id' => $loggedInUserId,
+                    
+                ),
+            );
+        } else {
+            $conditions = array(
+                'OR' => array(
+                    array(
+                        'Message.user_id' => $loggedInUserId,
+                        'Message.to_user_id' => $loggedInUserId,
+                    ),
+                    array(
+                        'Recipient.name LIKE' => '%' . $search . '%',
+                    ),
+                ),
+            );
+        }
+
+        
+
+        $data = $this->Message->find('all', array(
+            'conditions' => $conditions,
             'contain' => array(
                 'Sender' => array(
                     'fields' => array('Sender.id', 'Sender.name')
@@ -76,19 +268,21 @@ class MessageController extends AppController {
             'group' => 'Message.id',
             'limit' => $limit,
         ));
-    
 
-    
+        $loginUserData = array(
+            'loggedInUserId' => $loggedInUserId,
+            'messages' => $data,
+        );
+
+
         $this->response->type('json');
-        $this->response->body(json_encode($data));
+        $this->response->body(json_encode($loginUserData));
         return $this->response;
     }
-    
 
-    
     public function new() {
         $loggedInUserId = $this->Auth->user('id');
-    
+
         // $users = $this->User->find('list', array(
         //     'fields' => array('User.id', 'User.name'),
         //     'conditions' => array('User.id !=' => $loggedInUserId),
@@ -119,48 +313,55 @@ class MessageController extends AppController {
                 'profile_pic' => $userData['Profile']['profile_pic']
             );
         }
-        
+
 
         $this->set('recipient', $users);
-    
+
         if ($this->request->is('post')) {
             $this->request->data['Message']['user_id'] = $loggedInUserId;
             $this->request->data['Message']['created_at_ip'] = $this->request->clientIp();
             $selectedToUserId = reset($this->request->data['Message']['to_user_id']);
             $this->request->data['Message']['to_user_id'] = $selectedToUserId;
-        
-            // Check if a message to the same user already exists
+
             $existingMessage = $this->Message->find('first', array(
                 'conditions' => array(
-                    'Message.user_id' => $loggedInUserId,
-                    'Message.to_user_id' => $selectedToUserId
+                    'OR' => array(
+                        array(
+                            'Message.user_id' => $loggedInUserId,
+                            'Message.to_user_id' => $selectedToUserId
+                        ),
+                        array(
+                            'Message.user_id' => $selectedToUserId,
+                            'Message.to_user_id' => $loggedInUserId
+                        )
+                    )
                 )
             ));
-        
+
             if ($existingMessage) {
-                // If message already exists, update the details only
                 $messageContent = $this->request->data['Message']['message_content'];
-        
+
                 $this->Message->MessageDetail->create();
                 $detailData = array(
                     'message_list_id' => $existingMessage['Message']['id'],
                     'message_content' => $messageContent,
                     'created_at_ip' => $this->request->clientIp(),
+                    'sender_user_id' => $loggedInUserId,
                 );
-        
+
                 if ($this->Message->MessageDetail->save($detailData)) {
-                    $this->Flash->success(__('Message details added successfully.'));
-                    return $this->redirect(array('action' => 'index'));
+                    $this->Flash->success(__('Message sent successfully.'));
+                    $messageId = $existingMessage['Message']['id'];
+                    return $this->redirect(array('action' => 'view/' . $messageId));
                 } else {
                     $this->Flash->error(__('Error saving message details.'));
                 }
             } else {
-                // If message doesn't exist, create a new message and details
                 $this->Message->set($this->request->data);
-        
+
                 if ($this->Message->validates()) {
                     $messageContent = $this->request->data['Message']['message_content'];
-        
+
                     if ($this->Message->save($this->request->data)) {
                         $messageId = $this->Message->getLastInsertID();
                         $this->Message->MessageDetail->create();
@@ -168,11 +369,12 @@ class MessageController extends AppController {
                             'message_list_id' => $messageId,
                             'message_content' => $messageContent,
                             'created_at_ip' => $this->request->clientIp(),
+                            'sender_user_id' => $loggedInUserId,
                         );
-        
+
                         if ($this->Message->MessageDetail->save($detailData)) {
                             $this->Flash->success(__('Message sent successfully.'));
-                            return $this->redirect(array('action' => 'index'));
+                            return $this->redirect(array('action' => 'view/' . $messageId));
                         } else {
                             $this->Flash->error(__('Error saving message details.'));
                         }
@@ -184,13 +386,5 @@ class MessageController extends AppController {
                 }
             }
         }
-
-
-
-        
-        
     }
-    
-
-    
 }

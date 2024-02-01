@@ -21,6 +21,10 @@
 
 App::uses('Controller', 'Controller');
 
+App::uses('Router', 'Routing');
+
+
+
 
 /**
  * Application Controller
@@ -79,7 +83,7 @@ class AppController extends Controller {
                 'contain' => array('Profile'),
             ));
             $this->set('users', $userData);
-    
+            $this->set('appRoot', Router::url('/', true));
         }
     }
 }

@@ -1,8 +1,9 @@
 <?php
 App::uses('AuthComponent', 'Controller/Component');
-App::uses('SimplePasswordHasher', 'Controller/Component/Auth');
 
 class Message extends AppModel {
+    public $useTable = 'message_list';
+
     public $belongsTo = array(
         'Sender' => array(
             'className' => 'User',
@@ -21,7 +22,8 @@ class Message extends AppModel {
             'className' => 'MessageDetail',
             'foreignKey' => 'message_list_id',
             'order' => 'MessageDetail.created_at DESC',
-            'limit' => 1
+            'limit' => 1,
+            'dependent' => true 
         )
     );
 
@@ -38,22 +40,14 @@ class Message extends AppModel {
         ),
     );
 
-    public $useTable = 'message_list';
-
     public $validate = array(
         'to_user_id' => array(
-            'to_user_id' => array(
-                'rule' => array('notBlank'),
-                'message' => 'At least one recipient is required',
-            ),
+            'rule' => 'notBlank',
+            'message' => 'At least one recipient is required',
         ),
         'message_content' => array(
-            'message_content' => array(
-                'rule' => array('notBlank'),
-                'message' => 'Message content is required',
-            ),
+            'rule' => 'notBlank',
+            'message' => 'Message content is required',
         ),
     );
 }
-
-?>
