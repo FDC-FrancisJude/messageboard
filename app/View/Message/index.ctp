@@ -44,14 +44,14 @@
     function handleSearchChange(input) {
         var search = input.value;
         searchValue = search;
-        loadData(searchValue);
+        loadData(search);
     }
 
     $(document).ready(function() {
         loadData(searchValue);
-        setInterval(function() {
-            loadData(searchValue);
-        }, 2000);
+        // setInterval(function() {
+        //     loadData(searchValue);
+        // }, 2000);
     });
 
     function loadMoreMessages() {
@@ -84,6 +84,7 @@
         fetch('<?php echo $this->Html->url(array('controller' => 'message', 'action' => 'messageListData')) ?>?search=' + encodeURIComponent(search))
             .then(response => response.json())
             .then(data => {
+                console.log(data);
                 var messageList = document.getElementById('message-list');
                 messageList.innerHTML = '';
                 console.log(data.messages);

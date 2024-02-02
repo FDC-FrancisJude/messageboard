@@ -180,13 +180,16 @@ class MessageController extends AppController
         } else {
             $conditions = array(
                 'OR' => array(
-                    array(
-                        'Message.user_id' => $loggedInUserId,
-                        'Message.to_user_id' => $loggedInUserId,
-                    ),
-                    array(
+                    'Message.user_id' => $loggedInUserId,
+                    'Message.to_user_id' => $loggedInUserId,
+                    
+                ),
+                'AND' => array(
+                    'OR' => array(
                         'Recipient.name LIKE' => '%' . $search . '%',
+                        'Sender.name LIKE' => '%' . $search . '%',
                     ),
+                    
                 ),
             );
         }
