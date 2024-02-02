@@ -4,7 +4,7 @@ function formatTimeAgo(timestamp) {
     const diffInSeconds = Math.floor((now - created) / 1000);
 
     if (diffInSeconds < 60) {
-        return 'Now';
+        return 'Just Now';
     } else if (diffInSeconds < 3600) {
         return Math.floor(diffInSeconds / 60) + ' minutes ago';
     } else if (diffInSeconds < 86400) {

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Feb 01, 2024 at 10:37 AM
+-- Generation Time: Feb 02, 2024 at 08:56 AM
 -- Server version: 10.4.21-MariaDB
 -- PHP Version: 7.4.29
 
@@ -35,18 +35,23 @@ CREATE TABLE `message_details` (
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `created_at_ip` varchar(100) DEFAULT NULL,
   `modified_at` varchar(100) DEFAULT NULL,
-  `modified_at_ip` varchar(100) DEFAULT NULL
+  `modified_at_ip` varchar(100) DEFAULT NULL,
+  `deleted` int(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Dumping data for table `message_details`
 --
 
-INSERT INTO `message_details` (`id`, `message_list_id`, `message_content`, `sender_user_id`, `created_at`, `created_at_ip`, `modified_at`, `modified_at_ip`) VALUES
-(91, 52, 'sadasd', 6, '2024-02-01 08:09:32', '::1', NULL, NULL),
-(102, 57, 'asdasd,asdsajgdjasbgasuygdugu\r\nasdjhasdhakhjkkj\r\naskjdhjkdhklasdh\r\njahsdjkashkdhdsakajdklasdhlasd\r\nkajdliasdlaskahjdlahd\r\nahdlkashklsad', 6, '2024-02-01 08:29:58', '::1', NULL, NULL),
-(103, 57, 'sdsadsd', 7, '2024-02-01 08:38:42', '::1', NULL, NULL),
-(104, 57, 'jyagdsydgasdjadasjdasdasdASdaskdhaskdhad\r\naksdasdasdasaidyaisdahdashdad\r\nahdjkashdkasdksad', 7, '2024-02-01 08:38:53', '::1', NULL, NULL);
+INSERT INTO `message_details` (`id`, `message_list_id`, `message_content`, `sender_user_id`, `created_at`, `created_at_ip`, `modified_at`, `modified_at_ip`, `deleted`) VALUES
+(1, 1, 'Hi. How Are you?', 1, '2024-02-02 07:52:35', '::1', NULL, NULL, 0),
+(2, 1, 'Im good. How about you?', 2, '2024-02-02 07:52:56', '::1', NULL, NULL, 0),
+(3, 1, 'Im good too.', 1, '2024-02-02 07:53:10', '::1', NULL, NULL, 0),
+(4, 2, 'Hi.', 1, '2024-02-02 07:55:02', '::1', NULL, NULL, 1),
+(5, 2, 'Hello', 3, '2024-02-02 07:55:15', '::1', NULL, NULL, 1),
+(6, 2, 'Musta?\r\n', 1, '2024-02-02 07:55:23', '::1', NULL, NULL, 1),
+(7, 2, 'Okay ra ikaw?', 3, '2024-02-02 07:55:46', '::1', NULL, NULL, 1),
+(8, 2, 'Hi', 1, '2024-02-02 07:56:33', '::1', NULL, NULL, 0);
 
 -- --------------------------------------------------------
 
@@ -69,8 +74,8 @@ CREATE TABLE `message_list` (
 --
 
 INSERT INTO `message_list` (`id`, `user_id`, `to_user_id`, `created_at`, `created_at_ip`, `modified_at`, `modified_at_ip`) VALUES
-(52, 6, 8, '2024-02-01 08:09:32', '::1', NULL, NULL),
-(57, 6, 7, '2024-02-01 08:29:58', '::1', NULL, NULL);
+(1, 1, 2, '2024-02-02 07:52:35', '::1', NULL, NULL),
+(2, 1, 3, '2024-02-02 07:55:02', '::1', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -97,10 +102,9 @@ CREATE TABLE `profile` (
 --
 
 INSERT INTO `profile` (`id`, `name`, `profile_pic`, `birthday`, `gender`, `hubby`, `user_id`, `created_at`, `created_at_ip`, `modified_at`, `modified_at_ip`) VALUES
-(6, 'Francis Jude', 'profile_pic_1706759951.png', '2024-01-01', 'Female', 'asdasddsad\r\nas\r\ndsa\r\nd\r\nad\r\nasdasd', 6, '2024-01-30 06:23:15', '::1', NULL, NULL),
-(7, 'Francis Jude 2', 'profile_pic_1706678299.png', '2024-01-01', 'Male', 'sadasddasdsa\r\nasdasd\r\ndasd\r\nasd\r\nasd\r\nasd\r\nadasdsada', 7, '2024-01-30 06:40:58', '::1', NULL, NULL),
-(8, 'Francis Jude 3', 'profile_pic_1706598106.png', '2000-10-04', 'Male', 'HAHAHHA\r\nHAHAHA\r\nashdhddhd\r\nshdsahd\r\nsdsahd\r\nsda\r\n', 8, '2024-01-30 07:01:05', '::1', NULL, NULL),
-(9, 'HAHAHAHA', 'profile_pic_1706685976.png', '2014-01-01', 'Male', 'ashasddhasdsad', 9, '2024-01-31 07:25:40', '::1', NULL, NULL);
+(1, 'Francis Jude', 'profile_pic_1706860316.png', '2000-10-04', 'Male', 'Qwerty Qwerty Qwerty Qwerty\r\nQwerty Qwerty Qwerty Qwerty\r\nQwerty Qwerty Qwerty Qwerty\r\nQwerty Qwerty Qwerty Qwerty', 1, '2024-02-02 07:50:16', '::1', NULL, NULL),
+(2, 'Francis Jude 2', 'profile_pic_1706860268.png', '2003-10-22', 'Male', 'Sample Sample Sample Sample\r\nSample Sample Sample Sample\r\nSample Sample Sample Sample\r\nSample Sample Sample Sample', 2, '2024-02-02 07:50:32', '::1', NULL, NULL),
+(3, 'Francis Jude 3', 'profile_pic_1706860489.png', '2006-04-13', 'Male', 'Asdfgh Asdfgh Asdfgh Asdfgh\r\nAsdfgh Asdfgh Asdfgh Asdfgh\r\nAsdfgh Asdfgh Asdfgh Asdfgh\r\nAsdfgh Asdfgh Asdfgh Asdfgh', 3, '2024-02-02 07:54:18', '::1', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -125,10 +129,9 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `name`, `email`, `password`, `last_login_time`, `created_at`, `created_at_ip`, `modified_at`, `modified_at_ip`) VALUES
-(6, 'Francis Jude', 'fdc.francisjude@gmail.com', '23b9bb7fb45af8adf45c25bef88af7f69e75d7f8', '2024-02-01 08:39:17', '2024-01-30 06:23:15', '::1', NULL, NULL),
-(7, 'Francis Jude 2', 'fdc2.francisjude@gmail.com', '23b9bb7fb45af8adf45c25bef88af7f69e75d7f8', '2024-02-01 08:38:39', '2024-01-30 06:40:58', '::1', NULL, NULL),
-(8, 'Francis Jude 3', 'fdc3.francisjude@gmail.com', '23b9bb7fb45af8adf45c25bef88af7f69e75d7f8', '2024-02-01 06:59:16', '2024-01-30 07:01:05', '::1', NULL, NULL),
-(9, 'HAHAHAHA', 'hahaha@gmail.com', '23b9bb7fb45af8adf45c25bef88af7f69e75d7f8', '2024-01-31 07:25:40', '2024-01-31 07:25:40', '::1', NULL, NULL);
+(1, 'Francis Jude', 'fdc.francisjude@gmail.com', '23b9bb7fb45af8adf45c25bef88af7f69e75d7f8', '2024-02-02 07:50:16', '2024-02-02 07:50:16', '::1', NULL, NULL),
+(2, 'Francis Jude 2', 'fdc2.francisjude@gmail.com', '23b9bb7fb45af8adf45c25bef88af7f69e75d7f8', '2024-02-02 07:50:32', '2024-02-02 07:50:32', '::1', NULL, NULL),
+(3, 'Francis Jude 3', 'fdc3.francisjude@gmail.com', '23b9bb7fb45af8adf45c25bef88af7f69e75d7f8', '2024-02-02 07:54:18', '2024-02-02 07:54:18', '::1', NULL, NULL);
 
 --
 -- Indexes for dumped tables
@@ -166,25 +169,25 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `message_details`
 --
 ALTER TABLE `message_details`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=105;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `message_list`
 --
 ALTER TABLE `message_list`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=58;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `profile`
 --
 ALTER TABLE `profile`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

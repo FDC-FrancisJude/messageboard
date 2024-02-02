@@ -29,9 +29,7 @@
                     </div>
                 </div>
                 <div class="col-md-12 text-center mt-3">
-                    <?php if (count($messagelists) >= $limit) : ?>
-                        <button class="btn btn-primary btn-sm text-center" id="show-more" onclick="loadMoreMessages()">Show More</button>
-                    <?php endif; ?>
+                    <button class="btn btn-primary btn-sm text-center d-none" id="show-more" onclick="loadMoreMessages()">Show More</button>
                 </div>
             </div>
         </div>
@@ -39,24 +37,26 @@
 </div>
 
 <script>
-    var limit = 2;
-
+    var limit = 10;
+    var messageCount = 0;
+    var searchValue = "all";
+    
     function handleSearchChange(input) {
-        var searchValue = input.value;
-        console.log("Search value changed: " + searchValue);
+        var search = input.value;
+        searchValue = search;
         loadData(searchValue);
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
-        loadData('all');
-        // setInterval(function() {
-        //     loadData();
-        // }, 500);
+    $(document).ready(function() {
+        loadData(searchValue);
+        setInterval(function() {
+            loadData(searchValue);
+        }, 2000);
     });
 
     function loadMoreMessages() {
-        limit += 2;
-        loadData('all');
+        limit += 10;
+        loadData(searchValue);
     }
 
     function deleteMessage(messageId, listItem) {
@@ -71,7 +71,7 @@
             })
             .then(data => {
                 $(`.message-list.${messageId}`).fadeOut(500, function() {
-                    //loadData('all');
+                    loadData('all');
                 });
             })
             .catch(error => {
@@ -80,15 +80,23 @@
     }
 
     function loadData(search) {
-        console.log('<?php echo $this->Html->url(array('controller' => 'message', 'action' => 'messageListData')) ?>/' + limit + '?search=' + encodeURIComponent(search));
-        fetch('<?php echo $this->Html->url(array('controller' => 'message', 'action' => 'messageListData')) ?>/' + limit + '?search=' + encodeURIComponent(search))
+        messageCount = 0;
+        fetch('<?php echo $this->Html->url(array('controller' => 'message', 'action' => 'messageListData')) ?>?search=' + encodeURIComponent(search))
             .then(response => response.json())
             .then(data => {
                 var messageList = document.getElementById('message-list');
                 messageList.innerHTML = '';
                 console.log(data.messages);
+                if (data.messages.length > limit) {
+                    $('#show-more').removeClass('d-none');
+                } else {
+                    $('#show-more').addClass('d-none');
+                }
                 if (data.messages.length > 0) {
                     data.messages.forEach(message => {
+                        if (messageCount >= limit) {
+                            return; 
+                        }
                         var li = document.createElement('div');
                         li.className = `message-list ${message.Message.id}`;
 
@@ -116,12 +124,12 @@
                                                         <a href="message/view/${message.Message.id}" style="text-decoration: none; color: #000;">
                                                             <h4 class="mb-1">${message.Recipient.name}</h4>
                                                         </a>
-                                                        <a href="profile/view/${message.Recipient.id}" style="text-decoration: none; color: #000;">
+                                                        <!-- <a href="profile/view/${message.Recipient.id}" style="text-decoration: none; color: #000;">
                                                             <p>View Profile</p>
-                                                        </a>
+                                                        </a> -->
                                                         <small>Created At: ${formatFormalDate(message.Message.created_at)}</small>
                                                     </div>
-                                                    <span style="color: gray; width: 100px">Last message: ${truncatedMessage}</span>
+                                                    <small>Created By: You</small>
                                                     <small class="time-ago">${formatTimeAgo(message.MessageDetail[0].created_at)}</small>
                                                     <div class="float-end" >
                                                         <button class="btn btn-danger btn-sm" onclick="deleteMessage(${message.Message.id}, this.parentElement.parentElement.parentElement)">Delete</button>
@@ -136,9 +144,12 @@
                                                         <a href="message/view/${message.Message.id}" style="text-decoration: none; color: #000;">
                                                             <h4 class="mb-1">${message.Sender.name}</h4>
                                                         </a>
+                                                        <!-- <a href="profile/view/${message.Sender.id}" style="text-decoration: none; color: #000;">
+                                                            <p>View Profile</p>
+                                                        </a> -->
                                                         <small>Created At: ${formatFormalDate(message.Message.created_at)}</small>
                                                     </div>
-                                                    <span style="color: gray; width: 100px">Last message: ${truncatedMessage}</span>
+                                                    <small>Created By: ${message.Sender.name}</small>
                                                     <small class="time-ago">${formatTimeAgo(message.MessageDetail[0].created_at)}</small>
                                                     <div class="float-end" >
                                                         <button class="btn btn-danger btn-sm" onclick="deleteMessage(${message.Message.id}, this.parentElement.parentElement.parentElement)">Delete</button>
@@ -146,17 +157,14 @@
                                                 </div>
                                             </div>`;
                         }
-
-                        
-
-
                         messageList.appendChild(li);
+                        messageCount++;
                     });
                 } else {
                     var li = document.createElement('div');
                     li.className = `no-message`;
                     li.innerHTML = `<div class="text-center mt-3">
-                        <h4 style="color: #dbdbdb">No Conversation Found</h4>
+                        <h4 style="color: #dbdbdb">No Message Conversation Found</h4>
                     </div>`;
                     messageList.appendChild(li);
                 }

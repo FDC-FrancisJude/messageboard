@@ -1,7 +1,7 @@
 <?php
 class ProfileController extends AppController {
     public $belongsTo = 'User';
-    public $uses = array('User', 'Profile');
+    public $uses = array('User', 'Profile', 'TimeAgo');
 
     public function index() {
         
@@ -90,5 +90,17 @@ class ProfileController extends AppController {
             }
         }
     }
-    
+
+    public function view($id = null)
+    {
+        if (!$id) {
+            $this->redirect(array('controller' => 'message', 'action' => 'index'));
+        }
+
+        $this->loadModel('Profile');
+
+        $profile = $this->Profile->findById($id);
+
+        $this->set('profile', $profile);
+    }
 }
