@@ -28,55 +28,71 @@
         font-size: 15px;
         font-weight: lighter;
     }
+    #main {
+        max-height: 65vh;
+        height: 65vh;
+        overflow-y: auto;
+        margin-bottom: 10px;
+    }
 </style>
 <div class="container">
     <div class="card">
-        <div class="card-header">
+        <div class="card-header" id="sender-name">
 
         </div>
         <div class="card-body">
             <div class="row g-0">
-                <?php
-                echo $this->Form->create('MessageDetail', array('id' => 'replyForm'));
-                echo $this->Form->hidden('message_list_id', array('required' => true, 'class' => 'form-control message_list_id', 'value' => $messagID));
-                echo $this->Form->hidden('sender_user_id', array('required' => true, 'class' => 'form-control', 'value' => $users['User']['id']));
-                echo $this->Form->textarea('message_content', array('required' => true, 'class' => 'form-control message_content', 'placeholder' => 'Reply message...'));
-                echo $this->Form->button('Send Reply', array('id' => 'send-button', 'type' => 'submit', 'class' => 'send-button btn btn-success mt-2 float-end'));
-                echo $this->Form->end();
-                ?>
-
-                <div id="message-list">
-                    <div class="col-md-12 mt-3">
-                        <div class="no-message d-none">
-                            <div class="text-center mt-3">
-                                <h4 style="color: #dbdbdb">No Conversation Found</h4>
+                <div class="main" id="main">
+                    <div class="col-md-12 text-center mt-3">
+                        <div class="spinner-border text-primary" role="status"  id="show-more">
+                            <span class="sr-only"></span>
+                        </div>
+                    </div>
+                    <div id="message-list">
+                        <div class="col-md-12 mt-3">
+                            <div class="no-message d-none">
+                                <div class="text-center mt-3">
+                                    <h4 style="color: #dbdbdb">No Conversation Found</h4>
+                                </div>
                             </div>
                         </div>
                     </div>
+                   
                 </div>
-                <div class="col-md-12 text-center mt-3">
-                    <button class="d-none btn btn-primary btn-sm text-center" id="show-more" onclick="loadMoreMessages()">Show More</button>
-                </div>
+                <?php
+                    echo $this->Form->create('MessageDetail', array('id' => 'replyForm'));
+                    echo $this->Form->hidden('message_list_id', array('required' => true, 'class' => 'form-control message_list_id', 'value' => $messagID));
+                    echo $this->Form->hidden('sender_user_id', array('required' => true, 'class' => 'form-control', 'value' => $users['User']['id']));
+                    echo $this->Form->textarea('message_content', array('required' => true, 'class' => 'form-control message_content', 'placeholder' => 'Reply message...'));
+                    echo $this->Form->button('Send Reply', array('id' => 'send-button', 'type' => 'submit', 'class' => 'send-button btn btn-success mt-2 float-end'));
+                    echo $this->Form->end();
+                ?>
             </div>
         </div>
     </div>
 </div>
-
 <script>
     var limit = 10;
+    var offset = 0;
     var messageCount = 0;
     var loadedMessageIds = [];
-
+    var lastPosition = 0;
     document.addEventListener('DOMContentLoaded', function() {
         loadData();
         $('.send-button').prop('disabled', true).text('Send Reply');
 
         setInterval(function() {
             loadData();
-        }, 2000);
-
-
+        }, 1000);
     });
+
+    function scrollDown() {
+        $(".main").scrollTop($(".main")[0].scrollHeight + 10);
+        
+    }
+    function scrollRemain(lastPosition) {
+        $(".main").scrollTop($(".main")[0].scrollHeight - (lastPosition - 1));
+    }
 
     $('.message_content').on('input', function() {
         var inputValue = $(this).val();
@@ -96,9 +112,10 @@
             url: '<?php echo $this->Html->url(array('controller' => 'message', 'action' => 'add')); ?>',
             data: $('#replyForm').serialize(),
             success: function(response) {
-                loadData();
+                
                 $('.send-button').prop('disabled', false).text('Reply Sent');
                 $('.message_content').val('');
+                loadData();
             },
             error: function(error) {
                 console.log(error);
@@ -106,8 +123,27 @@
         });
     });
 
+    $(".main").scroll(function() {
+        var st = $(this).scrollTop();
+        console.log(st);
+        if (st < lastPosition) {
+            // Scrolling up
+            if (st == 0) {
+                $('#show-more').removeClass('d-none');
+                setTimeout(() => {
+                    $('#show-more').addClass('d-none');
+                    loadMoreMessages();
+                }, 1000);
+                
+            }
+        }
+        lastPosition = st;
+    });
     function loadMoreMessages() {
+        offset += 10;
         limit += 10;
+        lastPosition = $(".main")[0].scrollHeight;
+        scrollRemain(lastPosition);
         loadData();
     }
 
@@ -135,30 +171,35 @@
     }
 
     function loadData() {
-        fetch('<?php echo $this->Html->url(array('controller' => 'message', 'action' => 'messageDetailsData')) ?>')
+        $('#message-list').hide();
+        var url = '<?php echo $this->Html->url(array("controller" => "message", "action" => "messageDetailsData")) ?>?offset=' + offset;
+        fetch(url)
             .then(response => response.json())
             .then(data => {
-                console.log(data);
-                $('.card-header').text(data.messageName);
+                $('#sender-name').text(data.messageName);
                 if (data.messages.length > 0) {
                     var messageList = document.getElementById('message-list');
 
                     let find = data.messages.filter(newMessages => newMessages.MessageDetail.deleted == 0);
 
-                    if (find.length > limit) {
-                        $('#show-more').removeClass('d-none');
-                    } else {
-                        $('#show-more').addClass('d-none');
-                    }
+                    // if (data.dataAllCount > limit) {
+                    //     $('#show-more').removeClass('d-none');
+                    // } else {
+                    //     $('#show-more').addClass('d-none');
+                    // }
 
                     if (find.length > 0) {
+                        console.log(find);
                         $('.no-message').addClass('d-none');
-                        var newMessages = find.filter(message => !loadedMessageIds.includes(message.MessageDetail.id));
+                        var newMessages = find
+                                    .filter(message => !loadedMessageIds.includes(message.MessageDetail.id))
+                                    .slice(-10);
+                        if (offset == 0) {
+                            newMessages.reverse();
+                        } 
                         
-                        newMessages.forEach(message => {
-                            if (messageCount >= limit) {
-                                return;
-                            }
+                        newMessages.forEach(message => {    
+                           
                             loadedMessageIds.push(message.MessageDetail.id);
                             if (data.loggedInUserId == message.MessageDetail.sender_user_id) {
                                 var li = document.createElement('div');
@@ -197,10 +238,18 @@
                                                 <small class="time-ago">${formatTimeAgo(message.MessageDetail.created_at)}</small>
                                             </div>
                                         </div>`;
-
-                                messageList.appendChild(li);
+                                if (offset == 0) {
+                                    messageList.appendChild(li);
+                                    scrollDown();
+                                } else {
+                                    messageList.prepend(li);
+                                    //scrollRemain();
+                                }
+                                
                                 messageCount++;
+                                
                         });
+                        
                     }  else {
                         $('.no-message').removeClass('d-none');
                     }
@@ -209,7 +258,10 @@
             .catch(error => {
                 console.error('Error fetching data:', error);
             });
+
+            $('#message-list').show();
     }
+    
 
     function showFullMessage(parentElement) {
         const messageElement = parentElement.querySelector('#message');

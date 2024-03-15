@@ -65,15 +65,19 @@ class MessageController extends AppController
         $this->set('messagID', $id);
     }
     public function messageDetailsData() {
+        $offset = $_GET['offset'];
+        $limit = 10;
         $loggedInUserId = $this->Auth->user('id');
         $this->loadModel('MessageDetail');
         $messageId = $this->Session->read('messagID');
         $this->autoRender = false;
-
-        $data = $this->MessageDetail->find('all', array(
+        $query =  array(
             'conditions' => array(
                 'MessageDetail.message_list_id' => $messageId,
+                'MessageDetail.deleted = ' => 0,
             ),
+            'limit' => $limit,
+            'offset' => $offset,
             'fields' => array(
                 'MessageDetail.id',
                 'MessageDetail.message_content',
@@ -85,7 +89,7 @@ class MessageController extends AppController
                 'RecipientProfile.*',
                 'SenderUserProfile.*'
             ),
-            'order' => 'MessageDetail.created_at ASC',
+            'order' => 'MessageDetail.created_at DESC',
             'joins' => array(
                 array(
                     'table' => 'message_list',
@@ -120,12 +124,20 @@ class MessageController extends AppController
                     )
                 )
             )
-        ));
-
+        );
+        $data = $this->MessageDetail->find('all', $query);
+        
+        unset($query['limit']);
+        unset($query['offset']);
+        $dataAllCount = $this->MessageDetail->find('all', $query);
+        $dataAllCount = count($dataAllCount);
         $loginUserData = array(
             'loggedInUserId' => $loggedInUserId,
-            'messageName' => $data[0]['RecipientProfile']['name'],
+            'messageName' => $loggedInUserId == $data[0]['Message']['user_id'] ? $data[0]['RecipientProfile']['name'] : $data[0]['SenderProfile']['name'],
             'messages' => $data,
+            'dataAllCount' => $dataAllCount,
+            'offset' => $offset,
+            'limit' => $limit
         );
 
         $this->response->type('json');

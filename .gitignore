@@ -1,3 +1,14 @@
 
 app/tmp/cache/models/myapp_cake_model_default_messageboard_db_list
 app/tmp/*
+app/tmp/cache/models/myapp_cake_model_default_messageboard_db_list
+app/tmp/cache/models/myapp_cake_model_default_messageboard_db_message_details
+app/tmp/cache/models/myapp_cake_model_default_messageboard_db_message_list
+app/tmp/cache/models/myapp_cake_model_default_messageboard_db_profile
+app/tmp/cache/models/myapp_cake_model_default_messageboard_db_users
+app/tmp/cache/persistent/myapp_cake_core_cake_en-us
+app/tmp/cache/persistent/myapp_cake_core_file_map
+app/tmp/cache/persistent/myapp_cake_core_method_cache
+.DS_Store
+.gitignore
+app/.DS_Store
