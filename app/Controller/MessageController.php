@@ -47,25 +47,36 @@ class MessageController extends AppController
     }
 
     public function view($id = null) {
+        $loggedInUserId = $this->Auth->user('id');
         if (!$id) {
             $this->redirect(array('controller' => 'message', 'action' => 'index'));
         }
 
-        $existingMessageList = $this->Message->find('first', array(
+        $result = $this->Message->find('first', array(
             'conditions' => array(
                 'Message.id' => $id
             )
         ));
     
-        if (!$existingMessageList) {
+        if (!$result) {
             $this->Flash->error(__('Message not found.'));
             $this->redirect(array('controller' => 'message', 'action' => 'index'));
         }
         $this->Session->write('messagID', $id);
         $this->set('messagID', $id);
+        
+        if ($loggedInUserId == $result["Sender"]["id"]) {
+            $toName = $result["Recipient"]["name"];
+            $toDetails = $result["RecipientProfile"];
+        } else{
+            $toName = $result["Sender"]["name"];
+            $toDetails = $result["SenderProfile"];
+        }
+        $this->set('messageToUserName', $toName );
+        $this->set('messageToUserDetails', $toDetails);
     }
     public function messageDetailsData() {
-        $offset = $_GET['offset'];
+        $offset = isset($_GET['offset']) ? $_GET['offset'] : false;
         $limit = 10;
         $loggedInUserId = $this->Auth->user('id');
         $this->loadModel('MessageDetail');
@@ -74,7 +85,7 @@ class MessageController extends AppController
         $query =  array(
             'conditions' => array(
                 'MessageDetail.message_list_id' => $messageId,
-                'MessageDetail.deleted = ' => 0,
+                'MessageDetail.deleted' => 0,
             ),
             'limit' => $limit,
             'offset' => $offset,
@@ -125,20 +136,114 @@ class MessageController extends AppController
                 )
             )
         );
+
+        if ($offset === false) {
+            
+            unset($query['offset']);
+        }
+
         $data = $this->MessageDetail->find('all', $query);
         
         unset($query['limit']);
         unset($query['offset']);
-        $dataAllCount = $this->MessageDetail->find('all', $query);
-        $dataAllCount = count($dataAllCount);
-        $loginUserData = array(
-            'loggedInUserId' => $loggedInUserId,
-            'messageName' => $loggedInUserId == $data[0]['Message']['user_id'] ? $data[0]['RecipientProfile']['name'] : $data[0]['SenderProfile']['name'],
-            'messages' => $data,
-            'dataAllCount' => $dataAllCount,
+        $dataAllCount = $this->MessageDetail->find('count', $query);
+        if ($data > 0 && $dataAllCount > 0) {
+            $loginUserData = array(
+                'loggedInUserId' => $loggedInUserId,
+                'messageName' => $loggedInUserId == $data[0]['Message']['user_id'] ? $data[0]['RecipientProfile']['name'] : $data[0]['SenderProfile']['name'],
+                'messages' => $data,
+                'dataAllCount' => $dataAllCount,
+                'offset' => $offset,
+                'limit' => $limit
+            );
+        } else {
+            $loginUserData = array();
+        }
+        
+
+        $this->response->type('json');
+        $this->response->body(json_encode($loginUserData));
+        return $this->response;
+    }
+
+    public function getLatestReply() {
+        $offset = $_GET['offset'];
+        $limit = 10;
+        $loggedInUserId = $this->Auth->user('id');
+        $this->loadModel('MessageDetail');
+        $messageId = $this->Session->read('messagID');
+        $this->autoRender = false;
+        $query =  array(
+            'conditions' => array(
+                'MessageDetail.message_list_id' => $messageId,
+                'MessageDetail.deleted' => 0,
+            ),
+            'limit' => $limit,
             'offset' => $offset,
-            'limit' => $limit
+            'fields' => array(
+                'MessageDetail.id',
+                'MessageDetail.message_content',
+                'MessageDetail.sender_user_id',
+                'MessageDetail.created_at',
+                'MessageDetail.deleted',
+                'Message.*',
+                'SenderProfile.*',
+                'RecipientProfile.*',
+                'SenderUserProfile.*'
+            ),
+            'order' => 'MessageDetail.created_at DESC',
+            'joins' => array(
+                array(
+                    'table' => 'message_list',
+                    'alias' => 'Message',
+                    'type' => 'INNER',
+                    'conditions' => array(
+                        'Message.id = MessageDetail.message_list_id'
+                    )
+                ),
+                array(
+                    'table' => 'profile',
+                    'alias' => 'SenderProfile',
+                    'type' => 'INNER',
+                    'conditions' => array(
+                        'SenderProfile.user_id = Message.user_id'
+                    )
+                ),
+                array(
+                    'table' => 'profile',
+                    'alias' => 'RecipientProfile',
+                    'type' => 'INNER',
+                    'conditions' => array(
+                        'RecipientProfile.user_id = Message.to_user_id'
+                    )
+                ),
+                array(
+                    'table' => 'profile',
+                    'alias' => 'SenderUserProfile', 
+                    'type' => 'INNER',
+                    'conditions' => array(
+                        'SenderUserProfile.user_id = MessageDetail.sender_user_id'
+                    )
+                )
+            )
         );
+        $data = $this->MessageDetail->find('first', $query);
+        
+
+        $dataAllCount = $this->MessageDetail->find('count', $query);
+        if ($data > 0 && $dataAllCount > 0) {
+            $loginUserData = array(
+                'loggedInUserId' => $loggedInUserId,
+                'messageName' => $loggedInUserId == $data[0]['Message']['user_id'] ? $data[0]['RecipientProfile']['name'] : $data[0]['SenderProfile']['name'],
+                'messages' => $data,
+                'dataAllCount' => $dataAllCount,
+                'offset' => $offset,
+                'limit' => $limit
+            );
+        } else {
+            $loginUserData = array();
+        }
+        
 
         $this->response->type('json');
         $this->response->body(json_encode($loginUserData));
@@ -179,32 +284,18 @@ class MessageController extends AppController
 
     public function messageListData() {
         $search = isset($_GET['search']) ? $_GET['search'] : null;
+        $search = strtolower(str_replace(' ', '', $search));
         $this->autoRender = false;
         $loggedInUserId = $this->Auth->user('id');
 
-        if ($search == 'all') {
-            $conditions = array(
-                'OR' => array(
-                    'Message.user_id' => $loggedInUserId,
-                    'Message.to_user_id' => $loggedInUserId,
-                ),
-            );
-        } else {
-            $conditions = array(
-                'OR' => array(
-                    'Message.user_id' => $loggedInUserId,
-                    'Message.to_user_id' => $loggedInUserId,
-                    
-                ),
-                'AND' => array(
-                    'OR' => array(
-                        'Recipient.name LIKE' => '%' . $search . '%',
-                        'Sender.name LIKE' => '%' . $search . '%',
-                    ),
-                    
-                ),
-            );
-        }
+        $conditions = array(
+            'OR' => array(
+                'Message.user_id' => $loggedInUserId,
+                'Message.to_user_id' => $loggedInUserId,
+            ),
+        );
+
+        
 
         $data = $this->Message->find('all', array(
             'conditions' => $conditions,
@@ -218,6 +309,7 @@ class MessageController extends AppController
                     )
                 )
             ),
+
             'contain' => array(
                 'Sender' => array(
                     'fields' => array('Sender.id', 'Sender.name')
@@ -232,15 +324,37 @@ class MessageController extends AppController
             'order' => 'Message.created_at ASC',
             'group' => 'Message.id',
         ));
+        $datas = [];
 
-        $loginUserData = array(
+        foreach ($data as $key => $value) {
+            if ($search == 'all' || $search == '' ) {
+                $datas[] = $value;
+            } else {
+                if ($value["Sender"]["id"] == $loggedInUserId) {
+                  
+                    $name =   strtolower(str_replace(' ', '', $value["Recipient"]["name"]));
+                    if (strpos($name, $search) !== false) {
+                        $datas[] = $value;
+                    }
+                } else {
+                    $name = strtolower(str_replace(' ', '', $value["Sender"]["name"]));
+                    if (strpos($name, $search) !== false) {
+                        $datas[] = $value;
+                    }
+                }
+            }
+            
+        }
+        
+
+        $MessageData = array(
             'loggedInUserId' => $loggedInUserId,
-            'messages' => $data,
+            'messages' => $datas
         );
 
 
         $this->response->type('json');
-        $this->response->body(json_encode($loginUserData));
+        $this->response->body(json_encode($MessageData));
         return $this->response;
     }
 

@@ -84,10 +84,8 @@
         fetch('<?php echo $this->Html->url(array('controller' => 'message', 'action' => 'messageListData')) ?>?search=' + encodeURIComponent(search))
             .then(response => response.json())
             .then(data => {
-                console.log(data);
                 var messageList = document.getElementById('message-list');
                 messageList.innerHTML = '';
-                console.log(data.messages);
                 if (data.messages.length > limit) {
                     $('#show-more').removeClass('d-none');
                 } else {
